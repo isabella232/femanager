@@ -1,6 +1,8 @@
 <?php
 namespace In2code\Femanager\Domain\Validator;
 
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /**
  * Class ServersideValidator
  */
@@ -45,42 +47,42 @@ class ServersideValidator extends AbstractValidator
 
                         case 'required':
                             if ($validationSetting === '1' && !$this->validateRequired($value)) {
-                                $this->addError('validationErrorRequired', $field);
+                                $this->addErrorFor($field, 'validationErrorRequired');
                                 $this->isValid = false;
                             }
                             break;
 
                         case 'email':
                             if (!empty($value) && $validationSetting === '1' && !$this->validateEmail($value)) {
-                                $this->addError('validationErrorEmail', $field);
+                                $this->addErrorFor($field, 'validationErrorEmail');
                                 $this->isValid = false;
                             }
                             break;
 
                         case 'min':
                             if (!empty($value) && !$this->validateMin($value, $validationSetting)) {
-                                $this->addError('validationErrorMin', $field);
+                                $this->addErrorFor($field, 'validationErrorMin');
                                 $this->isValid = false;
                             }
                             break;
 
                         case 'max':
                             if (!empty($value) && !$this->validateMax($value, $validationSetting)) {
-                                $this->addError('validationErrorMax', $field);
+                                $this->addErrorFor($field, 'validationErrorMax');
                                 $this->isValid = false;
                             }
                             break;
 
                         case 'intOnly':
                             if (!empty($value) && $validationSetting === '1' && !$this->validateInt($value)) {
-                                $this->addError('validationErrorInt', $field);
+                                $this->addErrorFor($field, 'validationErrorInt');
                                 $this->isValid = false;
                             }
                             break;
 
                         case 'lettersOnly':
                             if (!empty($value) && $validationSetting === '1' && !$this->validateLetters($value)) {
-                                $this->addError('validationErrorLetters', $field);
+                                $this->addErrorFor($field, 'validationErrorLetters');
                                 $this->isValid = false;
                             }
                             break;
@@ -91,7 +93,7 @@ class ServersideValidator extends AbstractValidator
                                 $validationSetting === '1' &&
                                 !$this->validateUniquePage($value, $field, $user)
                             ) {
-                                $this->addError('validationErrorUniquePage', $field);
+                                $this->addErrorFor($field, 'validationErrorUniquePage');
                                 $this->isValid = false;
                             }
                             break;
@@ -102,28 +104,28 @@ class ServersideValidator extends AbstractValidator
                                 $validationSetting === '1' &&
                                 !$this->validateUniqueDb($value, $field, $user)
                             ) {
-                                $this->addError('validationErrorUniqueDb', $field);
+                                $this->addErrorFor($field, 'validationErrorUniqueDb');
                                 $this->isValid = false;
                             }
                             break;
 
                         case 'mustInclude':
                             if (!empty($value) && !$this->validateMustInclude($value, $validationSetting)) {
-                                $this->addError('validationErrorMustInclude', $field);
+                                $this->addErrorFor($field, 'validationErrorMustInclude');
                                 $this->isValid = false;
                             }
                             break;
 
                         case 'mustNotInclude':
                             if (!empty($value) && !$this->validateMustNotInclude($value, $validationSetting)) {
-                                $this->addError('validationErrorMustNotInclude', $field);
+                                $this->addErrorFor($field, 'validationErrorMustNotInclude');
                                 $this->isValid = false;
                             }
                             break;
 
                         case 'inList':
                             if (!$this->validateInList($value, $validationSetting)) {
-                                $this->addError('validationErrorInList', $field);
+                                $this->addErrorFor($field, 'validationErrorInList');
                                 $this->isValid = false;
                             }
                             break;
@@ -132,7 +134,7 @@ class ServersideValidator extends AbstractValidator
                             if (method_exists($user, 'get' . ucfirst($validationSetting))) {
                                 $valueToCompare = $user->{'get' . ucfirst($validationSetting)}();
                                 if (!$this->validateSameAs($value, $valueToCompare)) {
-                                    $this->addError('validationErrorSameAs', $field);
+                                    $this->addErrorFor($field, 'validationErrorSameAs');
                                     $this->isValid = false;
                                 }
                             }
@@ -148,7 +150,7 @@ class ServersideValidator extends AbstractValidator
                             // e.g. search for method validateCustom()
                             if (method_exists($this, 'validate' . ucfirst($validation))) {
                                 if (!$this->{'validate' . ucfirst($validation)}($value, $validationSetting)) {
-                                    $this->addError('validationError' . ucfirst($validation), $field);
+                                    $this->addErrorFor($field, 'validationError' . ucfirst($validation));
                                     $this->isValid = false;
                                 }
                             }
@@ -158,5 +160,29 @@ class ServersideValidator extends AbstractValidator
         }
 
         return $this->isValid;
+    }
+
+    /**
+     * Adds a property error to validation result object.
+     *
+     * @param string $property      User property
+     * @param string $message       Error message
+     * @param int    $code          Error code
+     * @param array  $arguments     Arguments to be replaced in message
+     * @param string $title         Title of the error
+     */
+    protected function addErrorFor($property, $message, $code = 0, array $arguments = [], $title = '')
+    {
+        $code = (is_numeric($code) && intval($code) > 0 ) ? $code : $property;
+
+        /** @var \TYPO3\CMS\Extbase\Validation\Error $error */
+        $error = GeneralUtility::makeInstance(
+            'TYPO3\CMS\Extbase\Validation\Error',
+            $message,
+            $code,
+            $arguments,
+            $title
+        );
+        $this->result->forProperty($property)->addError($error);
     }
 }
