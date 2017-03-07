@@ -9,7 +9,7 @@ return [
         'crdate' => 'crdate',
         'cruser_id' => 'cruser_id',
         'dividers2tabs' => true,
-        'versioningWS' => 2,
+        'versioningWS' => false,
         'versioning_followPages' => true,
         'origUid' => 't3_origuid',
         'languageField' => 'sys_language_uid',
